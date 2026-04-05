@@ -42,40 +42,54 @@ function App() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+        // Append new chunk to buffer
+        buffer += decoder.decode(value, { stream: true });
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = JSON.parse(line.slice(6));
+        // Split by double newline (SSE message boundary)
+        const messages = buffer.split('\n\n');
 
-            if (data.type === 'start') {
-              setCurrentStage('initializing');
-              setStageMessage('Starting research pipeline...');
-            } else if (data.type === 'stage') {
-              setCurrentStage(data.data.stage);
-              setStageMessage(data.data.message);
+        // Keep the last incomplete message in the buffer
+        buffer = messages.pop() || '';
 
-              if (data.data.status === 'completed') {
-                if (data.data.stage === 'research') {
-                  setResearchData(data.data.result);
-                } else if (data.data.stage === 'analysis') {
-                  setAnalysisData(data.data.result);
+        for (const message of messages) {
+          const lines = message.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+
+                if (data.type === 'start') {
+                  setCurrentStage('initializing');
+                  setStageMessage('Starting research pipeline...');
+                } else if (data.type === 'stage') {
+                  setCurrentStage(data.data.stage);
+                  setStageMessage(data.data.message);
+
+                  if (data.data.status === 'completed') {
+                    if (data.data.stage === 'research') {
+                      setResearchData(data.data.result);
+                    } else if (data.data.stage === 'analysis') {
+                      setAnalysisData(data.data.result);
+                    }
+                  }
+                } else if (data.type === 'complete') {
+                  setFinalReport(data.data);
+                  setCurrentStage('completed');
+                  setStageMessage('Research completed!');
+                  setIsLoading(false);
+                } else if (data.type === 'error') {
+                  setError(data.data.message);
+                  setIsLoading(false);
                 }
+              } catch (parseError) {
+                console.error('Failed to parse SSE data:', parseError, 'Line:', line);
               }
-            } else if (data.type === 'complete') {
-              setFinalReport(data.data);
-              setCurrentStage('completed');
-              setStageMessage('Research completed!');
-              setIsLoading(false);
-            } else if (data.type === 'error') {
-              setError(data.data.message);
-              setIsLoading(false);
             }
           }
         }
