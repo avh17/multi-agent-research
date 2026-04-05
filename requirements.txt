@@ -1,0 +1,18 @@
+# Core dependencies
+openai-agents
+python-dotenv
+pydantic>=2.0.0
+requests
+
+# FastAPI backend
+fastapi
+uvicorn[standard]
+sse-starlette
+
+# Jupyter (for development/testing)
+jupyter
+notebook
+ipykernel
+
+# Secret Manager client for Cloud Run deployment
+google-cloud-secret-manager

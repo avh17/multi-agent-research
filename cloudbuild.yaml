@@ -1,0 +1,30 @@
+# Cloud Build configuration for Google Cloud
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/research-pipeline:$SHORT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/research-pipeline:latest'
+      - '.'
+
+  # Push the Docker image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/research-pipeline:$SHORT_SHA'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/research-pipeline:latest'
+
+# Store images in Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/research-pipeline:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/research-pipeline:latest'
+
+# Build timeout
+timeout: 1200s

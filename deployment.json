@@ -1,0 +1,41 @@
+{
+  "deployedModel": {
+    "displayName": "research-pipeline-v1",
+    "model": "projects/80020550542/locations/us-central1/models/5701802319344041984",
+    "dedicatedResources": {
+      "machineSpec": {
+        "machineType": "n1-standard-2"
+      },
+      "minReplicaCount": 1,
+      "maxReplicaCount": 1
+    },
+    "containerSpec": {
+      "env": [
+        {
+          "name": "OPENAI_API_KEY",
+          "valueFrom": {
+            "secretKeyRef": {
+              "name": "projects/80020550542/secrets/openai-api-key/versions/latest"
+            }
+          }
+        },
+        {
+          "name": "TAVILY_API_KEY",
+          "valueFrom": {
+            "secretKeyRef": {
+              "name": "projects/80020550542/secrets/tavily-api-key/versions/latest"
+            }
+          }
+        },
+        {
+          "name": "PORT",
+          "value": "8080"
+        }
+      ]
+    }
+  },
+  "trafficSplit": {
+    "0": 100
+  }
+}
+ 
